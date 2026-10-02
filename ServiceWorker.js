@@ -1,9 +1,9 @@
 const cacheName = "DefaultCompany-ZigzagDash-1.0";
 const contentToCache = [
-    "Build/endoresu jyanpu.loader.js",
-    "Build/endoresu jyanpu.framework.js.unityweb",
-    "Build/endoresu jyanpu.data.unityweb",
-    "Build/endoresu jyanpu.wasm.unityweb",
+    "Build/エンドレス.loader.js",
+    "Build/エンドレス.framework.js.unityweb",
+    "Build/エンドレス.data.unityweb",
+    "Build/エンドレス.wasm.unityweb",
     "TemplateData/style.css"
 
 ];
