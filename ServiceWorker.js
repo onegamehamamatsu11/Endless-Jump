@@ -1,9 +1,9 @@
-const cacheName = "DefaultCompany-ZigzagDash-1.0";
+const cacheName = "DefaultCompany-Endless Jump-1.0";
 const contentToCache = [
-    "Build/エンドレス.loader.js",
-    "Build/エンドレス.framework.js.unityweb",
-    "Build/エンドレス.data.unityweb",
-    "Build/エンドレス.wasm.unityweb",
+    "Build/ゲーム書き出し用.loader.js",
+    "Build/ゲーム書き出し用.framework.js.unityweb",
+    "Build/ゲーム書き出し用.data.unityweb",
+    "Build/ゲーム書き出し用.wasm.unityweb",
     "TemplateData/style.css"
 
 ];
