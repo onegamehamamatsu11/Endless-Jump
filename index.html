@@ -1,124 +1,328 @@
+
 <!DOCTYPE html>
-<html lang="en-us">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity Web Player | Endless Jump</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
-    <link rel="manifest" href="manifest.webmanifest">
-  </head>
-  <body>
-    <div id="unity-container">
-      <div id="unity-fullscreen-container">
-        <canvas id="unity-canvas" width="1080" height="1920" tabindex="-1"></canvas>
-        <div id="unity-loading-container">
-          <div id="unity-loading-bar">
-            <div id="unity-logo"></div>
-            <div id="unity-progress-bar-empty">
-              <div id="unity-progress-bar-full"></div>
-            </div>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+  <title>Unity Web Player | Endless Jump</title>
+
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+  <link rel="stylesheet" href="TemplateData/style.css">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+    }
+
+    #unity-container {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      transform: none !important;
+      background: #000;
+    }
+
+    #unity-fullscreen-container {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      transform: none !important;
+      background: #000;
+    }
+
+    #unity-canvas {
+      display: block;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #000;
+      touch-action: none;
+    }
+
+    #unity-loading-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    #unity-loading-bar {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    #unity-warning {
+      position: absolute;
+      top: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="unity-container">
+
+    <div id="unity-fullscreen-container">
+
+      <canvas id="unity-canvas"
+              width="1080"
+              height="1920"
+              tabindex="-1"></canvas>
+
+      <div id="unity-loading-container">
+
+        <div id="unity-loading-bar">
+
+          <div id="unity-logo"></div>
+
+          <div id="unity-progress-bar-empty">
+            <div id="unity-progress-bar-full"></div>
           </div>
+
         </div>
+
       </div>
-      <div id="unity-warning"> </div>
+
     </div>
-    <script>
-      window.addEventListener("load", function () {
-        if ("serviceWorker" in navigator) {
-          navigator.serviceWorker.register("ServiceWorker.js");
+
+    <div id="unity-warning"></div>
+
+  </div>
+
+  <script>
+
+    // Service Workerを登録
+    window.addEventListener("load", function () {
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("ServiceWorker.js")
+          .catch(function (error) {
+            console.warn(
+              "Service Worker registration failed:",
+              error
+            );
+          });
+      }
+    });
+
+    var container =
+      document.querySelector("#unity-container");
+
+    var canvas =
+      document.querySelector("#unity-canvas");
+
+    var loadingContainer =
+      document.querySelector("#unity-loading-container");
+
+    var progressBarFull =
+      document.querySelector("#unity-progress-bar-full");
+
+    var warningBanner =
+      document.querySelector("#unity-warning");
+
+
+    // Unity警告表示
+    function unityShowBanner(msg, type) {
+
+      function updateBannerVisibility() {
+        warningBanner.style.display =
+          warningBanner.children.length
+            ? "block"
+            : "none";
+      }
+
+      var div = document.createElement("div");
+      div.textContent = msg;
+
+      warningBanner.appendChild(div);
+
+      if (type === "error") {
+
+        div.style =
+          "background: red; padding: 10px;";
+
+      } else {
+
+        if (type === "warning") {
+          div.style =
+            "background: yellow; padding: 10px;";
         }
+
+        setTimeout(function () {
+
+          if (div.parentNode) {
+            warningBanner.removeChild(div);
+          }
+
+          updateBannerVisibility();
+
+        }, 5000);
+      }
+
+      updateBannerVisibility();
+    }
+
+
+    // Unityビルド設定
+    var buildUrl = "Build";
+
+    var loaderUrl =
+      buildUrl + "/ゲーム書き出し用.loader.js";
+
+    var config = {
+
+      arguments: [],
+
+      dataUrl:
+        buildUrl +
+        "/ゲーム書き出し用.data.unityweb",
+
+      frameworkUrl:
+        buildUrl +
+        "/ゲーム書き出し用.framework.js.unityweb",
+
+      codeUrl:
+        buildUrl +
+        "/ゲーム書き出し用.wasm.unityweb",
+
+      streamingAssetsUrl: "StreamingAssets",
+
+      fullscreenElementID:
+        "unity-fullscreen-container",
+
+      companyName: "DefaultCompany",
+
+      productName: "Endless Jump",
+
+      productVersion: "1.0",
+
+      showBanner: unityShowBanner
+    };
+
+
+    // スマホ・iPadの描画負荷軽減
+    if (/iPhone|iPad|iPod|Android/i.test(
+      navigator.userAgent
+    )) {
+
+      config.devicePixelRatio = 1;
+
+    }
+
+
+    // 画面サイズ自動調整
+    function resizeGame() {
+
+      canvas.style.setProperty(
+        "width",
+        "100%",
+        "important"
+      );
+
+      canvas.style.setProperty(
+        "height",
+        "100%",
+        "important"
+      );
+
+    }
+
+
+    // 端末の画面サイズ変更に対応
+    window.addEventListener(
+      "resize",
+      resizeGame
+    );
+
+    if (window.visualViewport) {
+
+      window.visualViewport.addEventListener(
+        "resize",
+        resizeGame
+      );
+
+    }
+
+    resizeGame();
+
+
+    // Unity読み込み
+    var script = document.createElement("script");
+
+    script.src = loaderUrl;
+
+    script.onload = () => {
+
+      createUnityInstance(
+        canvas,
+        config,
+        (progress) => {
+
+          if (progress < 1) {
+
+            loadingContainer.style.display =
+              "block";
+
+            progressBarFull.style.width =
+              (100 * progress) + "%";
+
+          } else {
+
+            loadingContainer.style.display =
+              "none";
+
+          }
+
+        }
+
+      ).then((unityInstance) => {
+
+        loadingContainer.style.display =
+          "none";
+
+        resizeGame();
+
+      }).catch((message) => {
+
+        alert(message);
+
       });
 
-      var container = document.querySelector("#unity-container");
-      var canvas = document.querySelector("#unity-canvas");
-      var loadingContainer = document.querySelector("#unity-loading-container");
-      var progressBarFull = document.querySelector("#unity-progress-bar-full");
-      var warningBanner = document.querySelector("#unity-warning");
+    };
 
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
-      function unityShowBanner(msg, type) {
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
-      }
+    document.body.appendChild(script);
 
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/ゲーム書き出し用.loader.js";
-      var config = {
-        arguments: [],
-        dataUrl: buildUrl + "/ゲーム書き出し用.data.unityweb",
-        frameworkUrl: buildUrl + "/ゲーム書き出し用.framework.js.unityweb",
-        codeUrl: buildUrl + "/ゲーム書き出し用.wasm.unityweb",
-        streamingAssetsUrl: "StreamingAssets",
+  </script>
 
-        // If you have a custom web site structure, or want to place multiple Unity build instances on the same page,
-        // you can pass fullscreenElementID: "my-unity-fullscreen-container-id", in this configuration field to
-        // explicitly point to the element tree root that is displayed in fullscreen mode.
-        fullscreenElementID: "unity-fullscreen-container",
-
-        companyName: "DefaultCompany",
-        productName: "Endless Jump",
-        productVersion: "1.0",
-        showBanner: unityShowBanner,
-        // errorHandler: function(err, url, line) {
-        //    alert("error " + err + " occurred at line " + line);
-        //    // Return 'true' if you handled this error and don't want Unity
-        //    // to process it further, 'false' otherwise.
-        //    return true;
-        // },
-      };
-
-      // By default Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-      }
-
-
-
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          if (progress < 1) {
-            loadingContainer.style.display = "block";
-            progressBarFull.style.width = 100 * progress + "%";
-          } else {
-            loadingContainer.style.display = "none";
-          }
-        }).then((unityInstance) => {
-        }).catch((message) => {
-          alert(message);
-        });
-      };
-      document.body.appendChild(script);
-    </script>
-  </body>
+</body>
 </html>
